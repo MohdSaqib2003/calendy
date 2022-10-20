@@ -1,4 +1,4 @@
-import React, { useState, useEffect, createElement } from 'react'
+import React, { useState, useEffect, createElement, useRef } from 'react'
 import { DatePicker, Space, message, List } from 'antd';
 import moment from 'moment';
 import axios from 'axios';
@@ -9,6 +9,8 @@ const Admin = () => {
     const { RangePicker } = DatePicker;
     const [startDate, setStartDate] = useState(null);
     const [endDate, setEndDate] = useState(null);
+
+    const [temp, setTemp] = useState("Good");
 
     const onChange = (dates, dateStrings) => {
         if (dates) {
@@ -21,45 +23,64 @@ const Admin = () => {
         }
     };
 
+    // const setAvailableDate = () => {
+    //     if (startDate && endDate) {
+
+    //         var data = JSON.stringify({
+    //             start: {
+    //                 dateTime: startDate
+    //             },
+    //             end: {
+    //                 dateTime: endDate
+    //             },
+    //             description: "This is description by Saqib",
+    //             summary: "SaqibAvailable"
+    //         })
+    //         var config = {
+    //             method: 'post',
+    //             url: 'https://www.googleapis.com/calendar/v3/calendars/primary/events?sendUpdates=all',
+    //             headers: {
+    //                 'Authorization': `Bearer ${token}`,
+    //                 'Content-Type': 'text/plain'
+    //             },
+    //             data: data
+    //         };
+
+    //         axios(config).then((response) => {
+    //             console.log("Response : ", response);
+    //         }).catch((err) => {
+    //             console.log("Error : ", err);
+    //         })
+
+    //     } else {
+    //         message.warn("Pls select Date")
+    //     }
+    // }
+
     const setAvailableDate = () => {
         if (startDate && endDate) {
-
-            var data = JSON.stringify({
-                start: {
-                    dateTime: startDate
-                },
-                end: {
-                    dateTime: endDate
-                },
-                description: "This is description by Saqib",
-                summary: "SaqibAvailable"
-            })
-            var config = {
-                method: 'post',
-                url: 'https://www.googleapis.com/calendar/v3/calendars/primary/events?sendUpdates=all',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'text/plain'
-                },
-                data: data
-            };
-
-            axios(config).then((response) => {
-                console.log("Response : ", response);
+            const payload = [startDate, endDate];
+            axios.post(`http://localhost:3000/api/setAvailable`, payload).then((res) => {
+                console.log("POST DATA : ", res);
             }).catch((err) => {
-                console.log("Error : ", err);
+                console.log("Err : ", err);
             })
-
-        } else {
-            message.warn("Pls select Date")
         }
+    }
+
+
+
+    console.log("DATE START : ", startDate, " -- ", endDate);
+    
+    const fun = ()=>{
+        setTemp(null);
     }
 
     return (
         <div style={{ border: '1px solid black' }}>
             <h2>Set Availability</h2>
+            <button onClick={fun}>click</button>
             <div>
-
                 Select Date :
                 <Space direction="vertical" size={12}>
                     <RangePicker
@@ -73,7 +94,6 @@ const Admin = () => {
                     />
                 </Space>
                 <button onClick={setAvailableDate}>Set</button>
-                    
             </div>
         </div>
     )
