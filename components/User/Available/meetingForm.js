@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Form, Input } from 'antd';
+import { Button, Form, Input, message } from 'antd';
 import axios from 'axios';
+import Router, { useRouter } from 'next/router';
 
-const zoomToken = "eyJhbGciOiJIUzUxMiIsInYiOiIyLjAiLCJraWQiOiI1ZDBjZTcxOS01YjJiLTQzMjItOWQ1MC1kNmY5NDJmYjY1ZWEifQ.eyJ2ZXIiOjcsImF1aWQiOiI1OTI5ZjI0NzNhYWU3NzIwMzc0OGU1NTMyNTQ0ZTk2NiIsImNvZGUiOiJ3YmF4ZXpnOUJ3UGZSeTRWMzZBVGJteG9NOFFxbWsxVnciLCJpc3MiOiJ6bTpjaWQ6Y05LUThPeUZTVEpRd0plSmhHRkd3IiwiZ25vIjowLCJ0eXBlIjowLCJ0aWQiOjAsImF1ZCI6Imh0dHBzOi8vb2F1dGguem9vbS51cyIsInVpZCI6IkF6NHhfamNqUmdXQ2dzY0pfV1pwN1EiLCJuYmYiOjE2NjYxODAxNzYsImV4cCI6MTY2NjE4Mzc3NiwiaWF0IjoxNjY2MTgwMTc2LCJhaWQiOiJkUk85NGJhSVJtaXhnNDdEeXczTUhBIiwianRpIjoiZWVjNDQwMmQtZDEzMy00NTA1LWI1MTMtNDI1ZjdiNjlhYjYxIn0.0YUwxrt4XvB8iZobtTB5AdnyNnwypjH400_drzXviiyPsy_AMfRpRpKAUnfhamptznffCSgfGienBMPZFo5qfA";
+const zoomToken = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOm51bGwsImlzcyI6IkM0YW8tU2VWUTZtb3hDa3ZFX1pfclEiLCJleHAiOjE5MTk4NDY0NjAsImlhdCI6MTY2NzM4MTA3NX0.9IFsudfKrrt0kdshamJm4wlY1o1ULHmtDohvdDAqDx4";
 
-const token = 'ya29.a0Aa4xrXNgSot3t0ufVzQtPX-W6cfMOboQDCPDmHQKc6uDoHNrcPMbb7xQ0kmZ0rgq7NERQEhEq5jWYTNxANWokoqB8ZvR74wU5K0smk7HZ1oMRpQZndukhgGSkdkgTcWE5n_gJ4scZb2qariTClIOREeMmo_NhAaCgYKATASARISFQEjDvL92GR6soL9wdojfpcQQQtINg0165';
+const googleToken = 'ya29.a0Aa4xrXM1bj-1ANxFsAZ3bDGHlJZRRT2W9Zh8pEarpHzVCwdUVQYID2B3cHK3Bp5z8NZDz1q-R8HkKg2xIbOnoQPuZzsUt9Hi_PUpyUPj5zElJNKVl6HsR9Fse3CzeBLoLTWMmM-QAhefuePuW5sCTiCFTzBwBgaCgYKATASARISFQEjDvL9_ZrvCHnXTQ3zVw62dI7iAA0165';
 
 
 function diff_minutes(dt2, dt1) {
@@ -14,14 +15,20 @@ function diff_minutes(dt2, dt1) {
     return Math.abs(Math.round(diff));
 }
 
-const MeetingForm = ({ freeSlot, isModalOpen ,setIsModalOpen }) => {
+const MeetingForm = ({ freeSlot, isModalOpen, setIsModalOpen, setMeetingDetails }) => {
+    const router = useRouter();
     const [formData, setFormData] = useState(null);
     const [zoomResponse, setZoomResponse] = useState(null);
+    const [addEventReponse, setAddEventReponse] = useState(null);
+
     const [form] = Form.useForm();
+
+
 
     useEffect(() => {
         if (formData !== null) {
             const duration = diff_minutes(new Date(freeSlot[1]), new Date(freeSlot[0]));
+
             const zoomPayload = JSON.stringify({
                 topic: formData?.topic,
                 type: 2,
@@ -45,9 +52,11 @@ const MeetingForm = ({ freeSlot, isModalOpen ,setIsModalOpen }) => {
 
             axios.post(`http://localhost:3000/api`, zoomConfig).then((res) => {
                 console.log(res, "data from zoom");
+
                 setZoomResponse(res?.data?.data)
             }).catch((err) => {
                 console.log("Err : ", err);
+                message.error("failed ");
             })
             console.log("ZOOM CONFIG : ", zoomPayload);
         }
@@ -69,29 +78,40 @@ const MeetingForm = ({ freeSlot, isModalOpen ,setIsModalOpen }) => {
             })
 
             const addEventConfig = {
-                    method: 'post',
-                    url: 'https://www.googleapis.com/calendar/v3/calendars/primary/events?sendUpdates=all',
-                    headers: { 
-                      'Authorization': `Bearer ${token}`, 
-                      'Content-Type': 'application/json'
-                    },
-                    data : addEventPayload
+                method: 'post',
+                url: 'https://www.googleapis.com/calendar/v3/calendars/primary/events?sendUpdates=all',
+                headers: {
+                    'Authorization': `Bearer ${googleToken}`,
+                    'Content-Type': 'application/json'
+                },
+                data: addEventPayload
             }
 
-            axios(addEventConfig).then((res)=>{
+            axios(addEventConfig).then((res) => {
                 setIsModalOpen(false);
-                console.log("Response : ",res);
-            }).catch((err)=>{
+                message.success("Meeting has been added succesfully");
+                setMeetingDetails(zoomResponse);
+                ["2022-11-03T05:00:00+05:30","2022-11-03T06:00:00+05:30"];
+                
+                setAddEventReponse(res?.data);
+                    axios.post(`http://localhost:3000/api/deleteSlot`,  JSON.stringify(freeSlot)).then((res) => {
+                        console.log("SUCCES", res);
+                        // setDeleteLoading(false);
+                    }).catch((err) => {
+                        // setDeleteLoading(false);
+                        console.log("Err : ", err);
+                    })
+                console.log("Response : ", res);
+            }).catch((err) => {
+                message.error("failed ");
                 console.log("error : ", err);
             })
         }
-    }, [zoomResponse])
+    }, [zoomResponse]);
 
     const onFinish = (values) => {
         console.log('Success:', values);
-
         setFormData(values);
-
     };
     const onFinishFailed = (errorInfo) => {
         console.log('Failed:', errorInfo);
@@ -100,7 +120,8 @@ const MeetingForm = ({ freeSlot, isModalOpen ,setIsModalOpen }) => {
     console.log("FreeSlot : ", freeSlot);
     console.log("Zoom reposnse  : ", zoomResponse);
 
-    return (
+    return (<>
+
         <Form
             name="basic"
             labelCol={{
@@ -161,6 +182,7 @@ const MeetingForm = ({ freeSlot, isModalOpen ,setIsModalOpen }) => {
                 </Button>
             </Form.Item>
         </Form>
+        </>
     );
 };
 export default MeetingForm;

@@ -2,7 +2,7 @@ import { Button, Modal } from 'antd';
 import React, { useState } from 'react';
 import MeetingForm from './meetingForm';
 
-const SetModal = ({freeSlot}) => {
+const SetModal = ({freeSlot, setMeetingDetails}) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const showModal = () => {
       setIsModalOpen(true);
@@ -19,7 +19,7 @@ const SetModal = ({freeSlot}) => {
          Schedule
         </Button>
         <Modal title="Schedule Meeting" open={isModalOpen} onOk={handleOk} onCancel={handleCancel} footer={null}>
-        <MeetingForm freeSlot={freeSlot} isModalOpen={isModalOpen} setIsModalOpen={setIsModalOpen} />
+        <MeetingForm freeSlot={freeSlot} isModalOpen={isModalOpen} setIsModalOpen={setIsModalOpen} setMeetingDetails={setMeetingDetails}/>
         </Modal>
       </>
     );

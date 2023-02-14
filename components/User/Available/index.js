@@ -3,23 +3,19 @@ import axios from 'axios';
 import moment from 'moment';
 import SetModal from './SetModal';
 import { DatePicker, List, Space } from 'antd';
+import MeetingDetails from './MeetingDetails';
 
 const token = 'ya29.a0Aa4xrXMld9GwTJVj2E8S5pDNIW4y92f-etA0f0aR_4_jsrMbU-SG8Vqe7w3uXgYRYRrADiu3LnIz1sQ4ijqmZcas9p_e85iwD9twaR2g-2C7RUBKrTFzT6bunEGvVGOl0VQJSesVCagitwQe5dmdF_lx2PL_EAaCgYKATASARISFQEjDvL9qU0wHuaHNeePx0fkIry2lA0165';
 
-
-function diff_minutes(dt2, dt1) {
-    console.log(dt2);
-    var diff = (dt2.getTime() - dt1.getTime()) / 1000;
-    diff /= 60;
-    return Math.abs(Math.round(diff));
-}
 
 const Available = () => {
     const [freeSlots, setFreeSlots] = useState([]);
     const [allSlots, setAllSlots] = useState([]);
     const [selectedDate, setSelectedDate] = useState(null);
+    const [meetingDetails, setMeetingDetails] = useState(null);
 
     useEffect(() => {
+        setAllSlots(null);
         axios.get(`http://localhost:3000/api/getAvailable`).then((res) => {
             console.log("get DATA : ", res?.data);
             setAllSlots(res?.data?.slots);
@@ -27,10 +23,8 @@ const Available = () => {
         }).catch((err) => {
             console.log("Err : ", err);
         })
-
-        const currentDate = new Date();
-        console.log("CurrentDate : ", currentDate)
-    }, [])
+        console.log("USE EFFECT runs")
+    }, [,meetingDetails])
 
     useEffect(() => {
         if (allSlots?.length > 0) {
@@ -41,7 +35,7 @@ const Available = () => {
     }, [allSlots])
 
 
-    
+
 
     // useEffect(() => {
 
@@ -97,27 +91,38 @@ const Available = () => {
         setSelectedDate(moment(data?._d).format("DD-MM-YYYY"));
     }
 
+    const disabledDate = (current) => {
+        // Can not select days before today and today
+
+        let customDate = moment().format("YYYY-MM-DD");
+        return current && current < moment(customDate, "YYYY-MM-DD");
+    }
+
+
     return (
         <div>
-          
-            <h2>Schedule Meeting</h2>
+            <h2 style={{ textAlign: 'center' }}>Schedule Meeting</h2>
             <div>
                 <span>Choose Date : </span>
                 <Space direction="vertical">
-                    <DatePicker onChange={onSelectDateChange} defaultValue={moment()} clearIcon={<></>} />
+                    <DatePicker disabledDate={disabledDate} onChange={onSelectDateChange} defaultValue={moment()} clearIcon={<></>} />
                 </Space>
             </div>
 
-            <div>
+            <div style={{border:'1px solid black', padding:'20px'}}>
 
                 <div>
-                    Available slots on {selectedDate}
+                    <h3>
+                        {freeSlots?.length >= 1 ? "Available" : " No available "} slots on {selectedDate}
+                    </h3>
                 </div>
-
-            {freeSlots?.map((freeSlot) => {
-                return <List.Item style={{ border: '1px solid blue', margin: '5px' }}> {moment(freeSlot[0]).format("HH:mm")}  -  {moment(freeSlot[1]).format("HH:mm")}  <SetModal freeSlot={freeSlot} /></List.Item>
-            })}
+                <div>
+                {freeSlots?.map((freeSlot) => {
+                    return <List.Item style={{ border: '1px solid blue', margin: '5px' }}> {moment(freeSlot[0]).format("HH:mm")}  -  {moment(freeSlot[1]).format("HH:mm")}  <SetModal freeSlot={freeSlot} setMeetingDetails={setMeetingDetails}/></List.Item>
+                })}
+                </div>
             </div>
+            <MeetingDetails meetingDetails={meetingDetails} setMeetingDetails={setMeetingDetails}/>
         </div>
     )
 }

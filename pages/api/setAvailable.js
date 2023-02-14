@@ -12,12 +12,7 @@ export default async function handler(req, res) {
 
     readData = JSON.parse(readData);
 
-
-
-    console.log("start : ",typeof readData," : End");
-    console.log("start : ", readData," : End");
-
     readData.push(payload);
-    fs.writeFileSync(path, JSON.stringify(readData))
+    fs.writeFileSync(path, JSON.stringify(readData, null, 4))
     res.status(200).json({ name: 'Saqib' })
 }
